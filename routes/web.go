@@ -2,10 +2,12 @@ package routes
 
 import (
 	"github.com/goravel/framework/contracts/http"
+	"github.com/goravel/framework/contracts/route"
 	"github.com/goravel/framework/support"
 
-	"ui_greenmetric/app/http/controllers"
 	"ui_greenmetric/app/facades"
+	"ui_greenmetric/app/http/controllers"
+	"ui_greenmetric/app/http/middleware"
 )
 
 func Web() {
@@ -17,6 +19,16 @@ func Web() {
 
 	facades.Route().Static("public", "./public")
 
-	userController := controllers.NewUserController()
-	facades.Route().Get("/users", userController.Index)
+	authController := controllers.NewAuthController()
+
+	// API V1 Group
+	facades.Route().Prefix("/api/v1").Group(func(router route.Router) {
+		// Public Auth Routes
+		router.Post("/auth/login", authController.Login)
+
+		// Protected Routes (JWT & RBAC Middleware)
+		router.Middleware(&middleware.JwtMiddleware{}, &middleware.RbacMiddleware{}).Group(func(protected route.Router) {
+			protected.Post("/auth/logout", authController.Logout)
+		})
+	})
 }
