@@ -11,6 +11,18 @@ import (
 )
 
 func Web() {
+	// Register Global NotFound Middleware to handle 404 cleanly
+	facades.Route().GlobalMiddleware(&middleware.NotFoundMiddleware{})
+
+	// Global 500 Panic Recovery (must be registered at the beginning to avoid resetting router and wiping routes)
+	facades.Route().Recover(func(ctx http.Context, err any) {
+		ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"status":  "error",
+			"code":    http.StatusInternalServerError,
+			"message": "Terjadi kesalahan internal pada server",
+		})
+	})
+
 	facades.Route().Get("/", func(ctx http.Context) http.Response {
 		return ctx.Response().View().Make("welcome.tmpl", map[string]any{
 			"version": support.Version,
@@ -58,24 +70,6 @@ func Web() {
 			evidenceController := controllers.NewEvidenceController()
 			protected.Post("/evidences/upload", evidenceController.Upload)
 			protected.Delete("/evidences/{id}", evidenceController.Destroy)
-		})
-	})
-
-	// Global 404 Fallback
-	facades.Route().Fallback(func(ctx http.Context) http.Response {
-		return ctx.Response().Json(http.StatusNotFound, http.Json{
-			"status":  "error",
-			"code":    http.StatusNotFound,
-			"message": "Resource tidak ditemukan",
-		})
-	})
-
-	// Global 500 Panic Recovery
-	facades.Route().Recover(func(ctx http.Context, err any) {
-		ctx.Response().Json(http.StatusInternalServerError, http.Json{
-			"status":  "error",
-			"code":    http.StatusInternalServerError,
-			"message": "Terjadi kesalahan internal pada server",
 		})
 	})
 }
