@@ -29,6 +29,24 @@ func Web() {
 		// Protected Routes (JWT & RBAC Middleware)
 		router.Middleware(&middleware.JwtMiddleware{}, &middleware.RbacMiddleware{}).Group(func(protected route.Router) {
 			protected.Post("/auth/logout", authController.Logout)
+
+			// Campus Management (SUPER_ADMIN)
+			campusController := controllers.NewCampusController()
+			protected.Get("/campuses", campusController.Index)
+			protected.Post("/campuses", campusController.Store)
+			protected.Put("/campuses/{id}", campusController.Update)
+			protected.Delete("/campuses/{id}", campusController.Destroy)
+
+			// User Management (ADMIN_KAMPUS / SUPER_ADMIN)
+			userController := controllers.NewUserController()
+			protected.Get("/users", userController.Index)
+			protected.Post("/users", userController.Store)
+			protected.Put("/users/{id}", userController.Update)
+			protected.Delete("/users/{id}", userController.Destroy)
+
+			// Dashboard API
+			dashboardController := controllers.NewDashboardController()
+			protected.Get("/assessments/dashboard", dashboardController.Index)
 		})
 	})
 }
