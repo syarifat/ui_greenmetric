@@ -6,12 +6,12 @@ import (
 
 type User struct {
 	orm.Model
-	CampusID uint   `gorm:"column:campus_id"`
-	Name     string `gorm:"column:name"`
-	Email    string `gorm:"column:email;unique"`
-	Password string `gorm:"column:password"`
-	Role     string `gorm:"column:role"`
-	Campus   Campus `gorm:"foreignKey:CampusID"`
+	CampusID uint   `gorm:"column:campus_id" json:"campus_id"`
+	Name     string `gorm:"column:name" json:"name"`
+	Email    string `gorm:"column:email;unique" json:"email"`
+	Password string `gorm:"column:password" json:"-"`
+	Role     string `gorm:"column:role" json:"role"`
+	Campus   Campus `gorm:"foreignKey:CampusID" json:"campus,omitempty"`
 }
 
 func (User) TableName() string {

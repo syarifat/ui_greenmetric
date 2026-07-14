@@ -81,13 +81,12 @@ func (r *AssessmentController) GetIndicatorsByCategory(ctx http.Context) http.Re
 	answersMap := make(map[uint]models.AssessmentAnswer)
 	if assessment.ID != 0 && len(indicatorIDs) > 0 {
 		var answers []models.AssessmentAnswer
-		facades.Orm().Query().Where("campus_assessment_id = ? AND indicator_id IN ?", assessment.ID, indicatorIDs).Get(&answers)
+		facades.Orm().Query().With("Evidences").Where("campus_assessment_id = ? AND indicator_id IN ?", assessment.ID, indicatorIDs).Get(&answers)
 		for _, ans := range answers {
 			answersMap[ans.IndicatorID] = ans
 		}
 	}
 
-	// 5. Build response list
 	var resultList []http.Json
 	for _, ind := range indicators {
 		ans, hasAnswer := answersMap[ind.ID]
@@ -99,6 +98,7 @@ func (r *AssessmentController) GetIndicatorsByCategory(ctx http.Context) http.Re
 				"calculated_value": ans.CalculatedValue,
 				"selected_tier_id": ans.SelectedTierID,
 				"earned_points":    ans.EarnedPoints,
+				"evidences":        ans.Evidences,
 			}
 		}
 
