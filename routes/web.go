@@ -47,6 +47,11 @@ func Web() {
 			// Dashboard API
 			dashboardController := controllers.NewDashboardController()
 			protected.Get("/assessments/dashboard", dashboardController.Index)
+
+			// Assessment API (Core Scoring Engine)
+			assessmentController := controllers.NewAssessmentController()
+			protected.Get("/categories/{category_code}/indicators", assessmentController.GetIndicatorsByCategory)
+			protected.Post("/assessments/answers", assessmentController.SaveAnswer)
 		})
 	})
 }
