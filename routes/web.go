@@ -52,6 +52,30 @@ func Web() {
 			assessmentController := controllers.NewAssessmentController()
 			protected.Get("/categories/{category_code}/indicators", assessmentController.GetIndicatorsByCategory)
 			protected.Post("/assessments/answers", assessmentController.SaveAnswer)
+			protected.Post("/assessments/submit", assessmentController.SubmitAssessment)
+
+			// Evidence Upload API
+			evidenceController := controllers.NewEvidenceController()
+			protected.Post("/evidences/upload", evidenceController.Upload)
+			protected.Delete("/evidences/{id}", evidenceController.Destroy)
+		})
+	})
+
+	// Global 404 Fallback
+	facades.Route().Fallback(func(ctx http.Context) http.Response {
+		return ctx.Response().Json(http.StatusNotFound, http.Json{
+			"status":  "error",
+			"code":    http.StatusNotFound,
+			"message": "Resource tidak ditemukan",
+		})
+	})
+
+	// Global 500 Panic Recovery
+	facades.Route().Recover(func(ctx http.Context, err any) {
+		ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"status":  "error",
+			"code":    http.StatusInternalServerError,
+			"message": "Terjadi kesalahan internal pada server",
 		})
 	})
 }

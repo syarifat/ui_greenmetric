@@ -14,3 +14,7 @@ type IndicatorScoringTier struct {
 	PointMultiplier float64   `gorm:"column:point_multiplier"`
 	Indicator       Indicator `gorm:"foreignKey:IndicatorID"`
 }
+
+func (IndicatorScoringTier) TableName() string {
+	return "indicator_scoring_tiers"
+}

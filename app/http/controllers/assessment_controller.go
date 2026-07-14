@@ -209,4 +209,87 @@ func (r *AssessmentController) SaveAnswer(ctx http.Context) http.Response {
 			"overall_score":    assessment.OverallScore,
 		},
 	})
+}
+
+// SubmitAssessment finalizes and locks the assessment for a specific year
+func (r *AssessmentController) SubmitAssessment(ctx http.Context) http.Response {
+	var currentUser models.User
+	if err := facades.Auth(ctx).User(&currentUser); err != nil {
+		return ctx.Response().Json(http.StatusUnauthorized, http.Json{
+			"status":  "error",
+			"code":    http.StatusUnauthorized,
+			"message": "Unauthorized",
+		})
+	}
+
+	// Validate role: must be ADMIN_KAMPUS or SUPER_ADMIN
+	if currentUser.Role != "ADMIN_KAMPUS" && currentUser.Role != "SUPER_ADMIN" {
+		return ctx.Response().Json(http.StatusForbidden, http.Json{
+			"status":  "error",
+			"code":    http.StatusForbidden,
+			"message": "Forbidden: Only campus admins can submit and finalize assessments",
+		})
+	}
+
+	year := ctx.Request().InputInt("assessment_year")
+	if year == 0 {
+		return ctx.Response().Json(http.StatusUnprocessableEntity, http.Json{
+			"status":  "error",
+			"code":    http.StatusUnprocessableEntity,
+			"message": "assessment_year is required",
+		})
+	}
+
+	// Get Campus ID
+	var campusID uint
+	if currentUser.Role == "SUPER_ADMIN" {
+		campusID = uint(ctx.Request().InputInt("campus_id"))
+		if campusID == 0 {
+			return ctx.Response().Json(http.StatusUnprocessableEntity, http.Json{
+				"status":  "error",
+				"code":    http.StatusUnprocessableEntity,
+				"message": "campus_id is required for SUPER_ADMIN",
+			})
+		}
+	} else {
+		campusID = currentUser.CampusID
+	}
+
+	var assessment models.CampusAssessment
+	err := facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", campusID, year).First(&assessment)
+	if err != nil {
+		return ctx.Response().Json(http.StatusNotFound, http.Json{
+			"status":  "error",
+			"code":    http.StatusNotFound,
+			"message": "Campus assessment not found for the specified year",
+		})
+	}
+
+	// Check if already submitted
+	if assessment.Status == "SUBMITTED" || assessment.Status == "VERIFIED" {
+		return ctx.Response().Json(http.StatusUnprocessableEntity, http.Json{
+			"status":  "error",
+			"code":    http.StatusUnprocessableEntity,
+			"message": "Assessment has already been submitted and locked",
+		})
+	}
+
+	assessment.Status = "SUBMITTED"
+	if err := facades.Orm().Query().Save(&assessment); err != nil {
+		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"status":  "error",
+			"code":    http.StatusInternalServerError,
+			"message": "Failed to finalize assessment",
+		})
+	}
+
+	return ctx.Response().Json(http.StatusOK, http.Json{
+		"status":  "success",
+		"message": "Assessment finalized and locked successfully",
+		"data": http.Json{
+			"campus_assessment_id": assessment.ID,
+			"status":               assessment.Status,
+			"overall_score":        assessment.OverallScore,
+		},
+	})
 }	

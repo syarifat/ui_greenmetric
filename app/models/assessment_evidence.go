@@ -12,3 +12,7 @@ type AssessmentEvidence struct {
 	FileUrl            string           `gorm:"column:file_url"`
 	AssessmentAnswer   AssessmentAnswer `gorm:"foreignKey:AssessmentAnswerID"`
 }
+
+func (AssessmentEvidence) TableName() string {
+	return "assessment_evidences"
+}

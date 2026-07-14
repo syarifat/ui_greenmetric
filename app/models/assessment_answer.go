@@ -15,3 +15,7 @@ type AssessmentAnswer struct {
 	CampusAssessment   CampusAssessment `gorm:"foreignKey:CampusAssessmentID"`
 	Indicator          Indicator        `gorm:"foreignKey:IndicatorID"`
 }
+
+func (AssessmentAnswer) TableName() string {
+	return "assessment_answers"
+}

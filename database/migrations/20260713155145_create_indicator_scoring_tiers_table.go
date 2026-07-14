@@ -22,7 +22,7 @@ func (r *M20260713155145CreateIndicatorScoringTiersTable) Up() error {
 			table.String("option_label")
 			table.Decimal("min_value").Total(15).Places(4).Nullable()
 			table.Decimal("max_value").Total(15).Places(4).Nullable()
-			table.Enum("operator", []any{"<=", ">", ">=", "BETWEEN", "CHOICE"})
+			table.Enum("operator", []any{"<=", "<", ">", ">=", "BETWEEN", "CHOICE"})
 			table.Decimal("point_multiplier").Total(5).Places(2)
 			table.Timestamps()
 

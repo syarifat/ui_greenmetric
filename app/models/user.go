@@ -13,3 +13,7 @@ type User struct {
 	Role     string `gorm:"column:role"`
 	Campus   Campus `gorm:"foreignKey:CampusID"`
 }
+
+func (User) TableName() string {
+	return "users"
+}

@@ -20,7 +20,7 @@ func (m *JwtMiddleware) Handle(ctx http.Context) {
 		ctx.Response().Json(http.StatusUnauthorized, http.Json{
 			"status":  "error",
 			"code":    http.StatusUnauthorized,
-			"message": "Unauthorized: Invalid or expired token",
+			"message": "Token tidak valid atau kedaluwarsa",
 		})
 		return
 	}

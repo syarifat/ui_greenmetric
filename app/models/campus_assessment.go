@@ -12,3 +12,7 @@ type CampusAssessment struct {
 	Status         string  `gorm:"column:status"`
 	Campus         Campus  `gorm:"foreignKey:CampusID"`
 }
+
+func (CampusAssessment) TableName() string {
+	return "campus_assessments"
+}

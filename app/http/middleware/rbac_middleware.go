@@ -21,7 +21,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 		ctx.Response().Json(http.StatusUnauthorized, http.Json{
 			"status":  "error",
 			"code":    http.StatusUnauthorized,
-			"message": "Unauthorized: Invalid or expired token",
+			"message": "Token tidak valid atau kedaluwarsa",
 		})
 		return
 	}
@@ -48,7 +48,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 			ctx.Response().Json(http.StatusForbidden, http.Json{
 				"status":  "error",
 				"code":    http.StatusForbidden,
-				"message": "Forbidden: You do not have permission to access category " + categoryCode,
+				"message": "Anda tidak memiliki hak akses",
 			})
 			return
 		}
@@ -64,7 +64,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 		ctx.Response().Json(http.StatusForbidden, http.Json{
 			"status":  "error",
 			"code":    http.StatusForbidden,
-			"message": "Forbidden: Only SUPER_ADMIN can manage campuses",
+			"message": "Anda tidak memiliki hak akses",
 		})
 		return
 	}
@@ -79,7 +79,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 		ctx.Response().Json(http.StatusForbidden, http.Json{
 			"status":  "error",
 			"code":    http.StatusForbidden,
-			"message": "Forbidden: You do not have permission to manage users",
+			"message": "Anda tidak memiliki hak akses",
 		})
 		return
 	}

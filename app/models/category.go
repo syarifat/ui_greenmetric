@@ -11,3 +11,7 @@ type Category struct {
 	MaxPoints        int     `gorm:"column:max_points"`
 	WeightPercentage float64 `gorm:"column:weight_percentage"`
 }
+
+func (Category) TableName() string {
+	return "categories"
+}

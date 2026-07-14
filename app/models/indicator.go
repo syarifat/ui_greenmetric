@@ -13,3 +13,7 @@ type Indicator struct {
 	MaxPoints  int      `gorm:"column:max_points"`
 	Category   Category `gorm:"foreignKey:CategoryID"`
 }
+
+func (Indicator) TableName() string {
+	return "indicators"
+}

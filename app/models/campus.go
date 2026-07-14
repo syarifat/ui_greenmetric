@@ -12,3 +12,7 @@ type Campus struct {
 	Climate         string `gorm:"column:climate"`
 	Setting         string `gorm:"column:setting"`
 }
+
+func (Campus) TableName() string {
+	return "campuses"
+}
