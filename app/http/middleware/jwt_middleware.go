@@ -21,7 +21,7 @@ func (m *JwtMiddleware) Handle(ctx http.Context) {
 			"status":  "error",
 			"code":    http.StatusUnauthorized,
 			"message": "Token tidak valid atau kedaluwarsa",
-		})
+		}).Abort()
 		return
 	}
 

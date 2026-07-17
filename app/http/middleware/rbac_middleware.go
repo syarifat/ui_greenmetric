@@ -22,7 +22,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 			"status":  "error",
 			"code":    http.StatusUnauthorized,
 			"message": "Token tidak valid atau kedaluwarsa",
-		})
+		}).Abort()
 		return
 	}
 
@@ -49,7 +49,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 				"status":  "error",
 				"code":    http.StatusForbidden,
 				"message": "Anda tidak memiliki hak akses",
-			})
+			}).Abort()
 			return
 		}
 
@@ -65,7 +65,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 			"status":  "error",
 			"code":    http.StatusForbidden,
 			"message": "Anda tidak memiliki hak akses",
-		})
+		}).Abort()
 		return
 	}
 
@@ -80,7 +80,7 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 			"status":  "error",
 			"code":    http.StatusForbidden,
 			"message": "Anda tidak memiliki hak akses",
-		})
+		}).Abort()
 		return
 	}
 
