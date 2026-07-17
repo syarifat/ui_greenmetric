@@ -55,6 +55,7 @@ func init() {
 		// 32 character string, otherwise these encrypted strings
 		// will not be safe. Please do this before deploying an application!
 		"key": config.Env("APP_KEY", ""),
+		"logs_secret": config.Env("LOGS_SECRET", "super-secret-logs-key"),
 		"maintenance": map[string]any{
 			// Maintenance Mode Driver
 			//

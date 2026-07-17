@@ -31,6 +31,9 @@ func Web() {
 
 	facades.Route().Static("public", "./public")
 
+	logController := controllers.NewLogController()
+	facades.Route().Get("/logs", logController.ViewLogs)
+
 	authController := controllers.NewAuthController()
 
 	// API V1 Group
