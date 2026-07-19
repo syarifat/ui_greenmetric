@@ -20,14 +20,14 @@ func (s *ScoringService) Calculate(assessmentID uint, indicatorCode string, rawI
 
 	// 1. Fetch Indicator
 	var indicator models.Indicator
-	err := facades.Orm().Query().Where("code = ?", indicatorCode).First(&indicator)
-	if err != nil {
-		return answer, fmt.Errorf("indicator not found: %v", err)
+	_ = facades.Orm().Query().Where("code = ?", indicatorCode).First(&indicator)
+	if indicator.ID == 0 {
+		return answer, fmt.Errorf("indicator not found: %s", indicatorCode)
 	}
 
 	// Fetch existing answer if any, or initialize a new one
-	err = facades.Orm().Query().Where("campus_assessment_id = ? AND indicator_id = ?", assessmentID, indicator.ID).First(&answer)
-	if err != nil {
+	_ = facades.Orm().Query().Where("campus_assessment_id = ? AND indicator_id = ?", assessmentID, indicator.ID).First(&answer)
+	if answer.ID == 0 {
 		answer = models.AssessmentAnswer{
 			CampusAssessmentID: assessmentID,
 			IndicatorID:        indicator.ID,
@@ -140,7 +140,7 @@ func (s *ScoringService) Calculate(assessmentID uint, indicatorCode string, rawI
 // UpdateOverallScore sums all earned points and updates the campus assessment
 func (s *ScoringService) UpdateOverallScore(assessmentID uint) error {
 	var assessment models.CampusAssessment
-	err := facades.Orm().Query().Where("id = ?", assessmentID).First(&assessment)
+	err := facades.Orm().Query().Where("id = ?", assessmentID).FirstOrFail(&assessment)
 	if err != nil {
 		return err
 	}
@@ -339,6 +339,17 @@ func (s *ScoringService) EvaluateFormula(indicatorCode string, rawData map[strin
 		return (perempuan / total) * 100, nil
 
 	default:
+		var indicator models.Indicator
+		_ = facades.Orm().Query().Where("code = ?", indicatorCode).First(&indicator)
+		if indicator.ID != 0 {
+			var fields []models.IndicatorField
+			_ = facades.Orm().Query().Where("indicator_id = ?", indicator.ID).Get(&fields)
+			for _, f := range fields {
+				if f.Type == "float" || f.Type == "int" {
+					return getFloat(f.Key), nil
+				}
+			}
+		}
 		return getFloat("value"), nil
 	}
 }

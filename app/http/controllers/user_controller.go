@@ -162,7 +162,7 @@ func (r *UserController) Update(ctx http.Context) http.Response {
 
 	id := ctx.Request().RouteInt("id")
 	var user models.User
-	err := facades.Orm().Query().Where("id = ?", id).First(&user)
+	err := facades.Orm().Query().Where("id = ?", id).FirstOrFail(&user)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
@@ -259,7 +259,7 @@ func (r *UserController) Destroy(ctx http.Context) http.Response {
 
 	id := ctx.Request().RouteInt("id")
 	var user models.User
-	err := facades.Orm().Query().Where("id = ?", id).First(&user)
+	err := facades.Orm().Query().Where("id = ?", id).FirstOrFail(&user)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",

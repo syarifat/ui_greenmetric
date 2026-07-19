@@ -47,22 +47,40 @@ func (s *UserSeeder) Run() error {
 		return err
 	}
 
-	adminUser := models.User{
-		CampusID: activeCampus.ID,
-		Name:     "Syarif Admin Green Campus",
-		Email:    "admin@polinema.ac.id",
-		Password: hashedPassword,
-		Role:     "ADMIN_KAMPUS",
+	users := []models.User{
+		{
+			CampusID: activeCampus.ID,
+			Name:     "Syarif Super Admin",
+			Email:    "super@greencampus.org",
+			Password: hashedPassword,
+			Role:     "SUPER_ADMIN",
+		},
+		{
+			CampusID: activeCampus.ID,
+			Name:     "Syarif Admin Green Campus",
+			Email:    "admin@polinema.ac.id",
+			Password: hashedPassword,
+			Role:     "ADMIN_KAMPUS",
+		},
+		{
+			CampusID: activeCampus.ID,
+			Name:     "Syarif Operator SI",
+			Email:    "operator.si@polinema.ac.id",
+			Password: hashedPassword,
+			Role:     "OPERATOR_SI",
+		},
 	}
 
-	userCount, err := facades.Orm().Query().Model(&models.User{}).Where("email = ?", adminUser.Email).Count()
-	if err != nil {
-		return err
-	}
-
-	if userCount == 0 {
-		if err := facades.Orm().Query().Create(&adminUser); err != nil {
+	for _, user := range users {
+		userCount, err := facades.Orm().Query().Model(&models.User{}).Where("email = ?", user.Email).Count()
+		if err != nil {
 			return err
+		}
+
+		if userCount == 0 {
+			if err := facades.Orm().Query().Create(&user); err != nil {
+				return err
+			}
 		}
 	}
 

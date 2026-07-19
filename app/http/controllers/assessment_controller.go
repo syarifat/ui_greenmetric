@@ -36,8 +36,8 @@ func (r *AssessmentController) GetIndicatorsByCategory(ctx http.Context) http.Re
 
 	// 1. Fetch Category
 	var category models.Category
-	err := facades.Orm().Query().Where("code = ?", categoryCode).First(&category)
-	if err != nil {
+	_ = facades.Orm().Query().Where("code = ?", categoryCode).First(&category)
+	if category.ID == 0 {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
 			"code":    http.StatusNotFound,
@@ -47,7 +47,7 @@ func (r *AssessmentController) GetIndicatorsByCategory(ctx http.Context) http.Re
 
 	// 2. Fetch Indicators in Category
 	var indicators []models.Indicator
-	err = facades.Orm().Query().Where("category_id = ?", category.ID).Get(&indicators)
+	err := facades.Orm().Query().With("Fields").Where("category_id = ?", category.ID).Get(&indicators)
 	if err != nil {
 		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
 			"status":  "error",
@@ -113,6 +113,7 @@ func (r *AssessmentController) GetIndicatorsByCategory(ctx http.Context) http.Re
 			"title":      ind.Title,
 			"input_type": ind.InputType,
 			"max_points": ind.MaxPoints,
+			"fields":     ind.Fields,
 			"tiers":      indTiers,
 			"answer":     answerData,
 		})
@@ -160,8 +161,8 @@ func (r *AssessmentController) SaveAnswer(ctx http.Context) http.Response {
 
 	// 1. Get or Create CampusAssessment for the year
 	var assessment models.CampusAssessment
-	err = facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", currentUser.CampusID, saveRequest.AssessmentYear).First(&assessment)
-	if err != nil {
+	_ = facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", currentUser.CampusID, saveRequest.AssessmentYear).First(&assessment)
+	if assessment.ID == 0 {
 		// Not found, create one
 		assessment = models.CampusAssessment{
 			CampusID:       currentUser.CampusID,
@@ -174,6 +175,12 @@ func (r *AssessmentController) SaveAnswer(ctx http.Context) http.Response {
 				"status":  "error",
 				"code":    http.StatusInternalServerError,
 				"message": "Failed to create campus assessment",
+			})
+		}
+		if assessment.ID == 0 {
+			return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+				"status":  "error",
+				"message": "assessment ID is 0 after CREATE",
 			})
 		}
 	}
@@ -256,8 +263,8 @@ func (r *AssessmentController) SubmitAssessment(ctx http.Context) http.Response 
 	}
 
 	var assessment models.CampusAssessment
-	err := facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", campusID, year).First(&assessment)
-	if err != nil {
+	_ = facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", campusID, year).First(&assessment)
+	if assessment.ID == 0 {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
 			"code":    http.StatusNotFound,

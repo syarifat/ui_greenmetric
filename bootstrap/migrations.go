@@ -17,5 +17,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20260713155153CreateCampusAssessmentsTable{},
 		&migrations.M20260713155204CreateAssessmentAnswersTable{},
 		&migrations.M20260713155211CreateAssessmentEvidencesTable{},
+		&migrations.M20260719091940CreateIndicatorFieldsTable{},
 	}
 }

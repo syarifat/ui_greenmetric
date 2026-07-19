@@ -59,8 +59,8 @@ func (m *RbacMiddleware) Handle(ctx http.Context) {
 
 	// 3. Check management actions (Campuses: SUPER_ADMIN only, Users: ADMIN_KAMPUS/SUPER_ADMIN)
 	path := ctx.Request().Path()
-	if strings.Contains(path, "/campuses") {
-		// Only SUPER_ADMIN can manage campuses
+	if strings.Contains(path, "/campuses") || strings.Contains(path, "/admin/indicators") {
+		// Only SUPER_ADMIN can manage campuses and indicators
 		ctx.Response().Json(http.StatusForbidden, http.Json{
 			"status":  "error",
 			"code":    http.StatusForbidden,

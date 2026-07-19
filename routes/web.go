@@ -52,6 +52,13 @@ func Web() {
 			protected.Put("/campuses/{id}", campusController.Update)
 			protected.Delete("/campuses/{id}", campusController.Destroy)
 
+			// Indicator Management (SUPER_ADMIN)
+			adminIndicatorController := controllers.NewAdminIndicatorController()
+			protected.Get("/admin/indicators", adminIndicatorController.Index)
+			protected.Post("/admin/indicators", adminIndicatorController.Store)
+			protected.Put("/admin/indicators/{id}", adminIndicatorController.Update)
+			protected.Delete("/admin/indicators/{id}", adminIndicatorController.Destroy)
+
 			// User Management (ADMIN_KAMPUS / SUPER_ADMIN)
 			userController := controllers.NewUserController()
 			protected.Get("/users", userController.Index)

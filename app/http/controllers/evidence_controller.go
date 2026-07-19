@@ -70,7 +70,7 @@ func (r *EvidenceController) Upload(ctx http.Context) http.Response {
 	}
 
 	var answer models.AssessmentAnswer
-	err = facades.Orm().Query().Where("id = ?", answerID).First(&answer)
+	err = facades.Orm().Query().Where("id = ?", answerID).FirstOrFail(&answer)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
@@ -80,7 +80,7 @@ func (r *EvidenceController) Upload(ctx http.Context) http.Response {
 	}
 
 	var assessment models.CampusAssessment
-	err = facades.Orm().Query().Where("id = ?", answer.CampusAssessmentID).First(&assessment)
+	err = facades.Orm().Query().Where("id = ?", answer.CampusAssessmentID).FirstOrFail(&assessment)
 	if err != nil {
 		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
 			"status":  "error",
@@ -164,7 +164,7 @@ func (r *EvidenceController) Destroy(ctx http.Context) http.Response {
 
 	evidenceID := ctx.Request().RouteInt("id")
 	var evidence models.AssessmentEvidence
-	err := facades.Orm().Query().Where("id = ?", evidenceID).First(&evidence)
+	err := facades.Orm().Query().Where("id = ?", evidenceID).FirstOrFail(&evidence)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
@@ -174,7 +174,7 @@ func (r *EvidenceController) Destroy(ctx http.Context) http.Response {
 	}
 
 	var answer models.AssessmentAnswer
-	err = facades.Orm().Query().Where("id = ?", evidence.AssessmentAnswerID).First(&answer)
+	err = facades.Orm().Query().Where("id = ?", evidence.AssessmentAnswerID).FirstOrFail(&answer)
 	if err != nil {
 		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
 			"status":  "error",
@@ -184,7 +184,7 @@ func (r *EvidenceController) Destroy(ctx http.Context) http.Response {
 	}
 
 	var assessment models.CampusAssessment
-	err = facades.Orm().Query().Where("id = ?", answer.CampusAssessmentID).First(&assessment)
+	err = facades.Orm().Query().Where("id = ?", answer.CampusAssessmentID).FirstOrFail(&assessment)
 	if err != nil {
 		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
 			"status":  "error",

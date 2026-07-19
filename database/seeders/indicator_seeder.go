@@ -1,5 +1,5 @@
 package seeders
-	
+
 import (
 	"fmt"
 	"ui_greenmetric/app/facades"
@@ -107,24 +107,154 @@ func (s *IndicatorSeeder) Run() error {
 		}
 
 		for _, ind := range indicators {
-			count, err := facades.Orm().Query().Model(&models.Indicator{}).Where("code = ?", ind.Code).Count()
-			if err != nil {
-				return err
-			}
-			if count == 0 {
-				newIndicator := models.Indicator{
+			var dbIndicator models.Indicator
+			_ = facades.Orm().Query().Where("code = ?", ind.Code).First(&dbIndicator)
+			if dbIndicator.ID == 0 {
+				// Create new indicator
+				dbIndicator = models.Indicator{
 					CategoryID: category.ID,
 					Code:       ind.Code,
 					Title:      ind.Title,
 					InputType:  ind.InputType,
 					MaxPoints:  ind.MaxPoints,
 				}
-				if err := facades.Orm().Query().Create(&newIndicator); err != nil {
+				if err := facades.Orm().Query().Create(&dbIndicator); err != nil {
 					return fmt.Errorf("failed to create indicator %s: %v", ind.Code, err)
+				}
+			}
+
+			// Seed fields for this indicator
+			fields := getFieldsForIndicator(ind.Code, ind.InputType)
+			for _, f := range fields {
+				count, err := facades.Orm().Query().Model(&models.IndicatorField{}).
+					Where("indicator_id = ? AND `key` = ?", dbIndicator.ID, f.Key).Count()
+				if err != nil {
+					return err
+				}
+				if count == 0 {
+					f.IndicatorID = dbIndicator.ID
+					if err := facades.Orm().Query().Create(&f); err != nil {
+						return fmt.Errorf("failed to create field %s for indicator %s: %v", f.Key, ind.Code, err)
+					}
 				}
 			}
 		}
 	}
 
 	return nil
+}
+
+func getFieldsForIndicator(code string, inputType string) []models.IndicatorField {
+	if inputType == "SINGLE_CHOICE" {
+		return []models.IndicatorField{
+			{Key: "option_label", Label: "Pilih Opsi Kriteria", Type: "choice", Required: true},
+		}
+	}
+
+	switch code {
+	case "SI1":
+		return []models.IndicatorField{
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+			{Key: "luas_dasar", Label: "Total Luas Lantai Dasar Bangunan (m2)", Type: "float", Required: true},
+		}
+	case "SI2":
+		return []models.IndicatorField{
+			{Key: "luas_hutan", Label: "Total Luas Kampus Ditutupi Hutan (m2)", Type: "float", Required: true},
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+		}
+	case "SI3":
+		return []models.IndicatorField{
+			{Key: "luas_vegetasi", Label: "Total Luas Kampus Ditutupi Vegetasi Tanam (m2)", Type: "float", Required: true},
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+		}
+	case "SI4":
+		return []models.IndicatorField{
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+			{Key: "luas_dasar", Label: "Total Luas Lantai Dasar Bangunan (m2)", Type: "float", Required: true},
+			{Key: "populasi", Label: "Total Populasi Kampus (Orang)", Type: "float", Required: true},
+		}
+	case "EC1":
+		return []models.IndicatorField{
+			{Key: "persentase_alat_hemat_energi", Label: "Persentase Peralatan Hemat Energi (%)", Type: "float", Required: true},
+		}
+	case "EC2":
+		return []models.IndicatorField{
+			{Key: "luas_smart_building", Label: "Total Luas Smart Building (m2)", Type: "float", Required: true},
+			{Key: "luas_total_bangunan", Label: "Total Luas Bangunan Kampus (m2)", Type: "float", Required: true},
+		}
+	case "EC4":
+		return []models.IndicatorField{
+			{Key: "total_listrik", Label: "Total Penggunaan Listrik Tahunan (kWh)", Type: "float", Required: true},
+			{Key: "populasi", Label: "Total Populasi Kampus (Orang)", Type: "float", Required: true},
+		}
+	case "EC5":
+		return []models.IndicatorField{
+			{Key: "produksi_energi_terbarukan", Label: "Total Produksi Energi Terbarukan (kWh)", Type: "float", Required: true},
+			{Key: "total_penggunaan_energi", Label: "Total Penggunaan Energi Tahunan (kWh)", Type: "float", Required: true},
+		}
+	case "EC8":
+		return []models.IndicatorField{
+			{Key: "jejak_karbon", Label: "Total Jejak Karbon Tahunan (Metrik Ton CO2)", Type: "float", Required: true},
+			{Key: "populasi", Label: "Total Populasi Kampus (Orang)", Type: "float", Required: true},
+		}
+	case "WR1":
+		return []models.IndicatorField{
+			{Key: "area_resapan", Label: "Total Area Resapan Air (m2)", Type: "float", Required: true},
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+		}
+	case "WR5":
+		return []models.IndicatorField{
+			{Key: "air_olahan_dikonsumsi", Label: "Total Konsumsi Air Olahan (m3)", Type: "float", Required: true},
+			{Key: "total_air_dikonsumsi", Label: "Total Konsumsi Air Kampus (m3)", Type: "float", Required: true},
+		}
+	case "TR1":
+		return []models.IndicatorField{
+			{Key: "total_kendaraan", Label: "Total Jumlah Kendaraan Mobil & Motor Bermesin Pembakaran", Type: "float", Required: true},
+			{Key: "populasi", Label: "Total Populasi Kampus (Orang)", Type: "float", Required: true},
+		}
+	case "TR4":
+		return []models.IndicatorField{
+			{Key: "total_zev", Label: "Total Jumlah Zero Emission Vehicles (ZEV)", Type: "float", Required: true},
+			{Key: "populasi", Label: "Total Populasi Kampus (Orang)", Type: "float", Required: true},
+		}
+	case "TR5":
+		return []models.IndicatorField{
+			{Key: "luas_parkir", Label: "Total Luas Area Parkir Permukaan (m2)", Type: "float", Required: true},
+			{Key: "luas_total", Label: "Total Luas Kampus (m2)", Type: "float", Required: true},
+		}
+	case "ED1":
+		return []models.IndicatorField{
+			{Key: "mk_keberlanjutan", Label: "Jumlah Mata Kuliah Terkait Keberlanjutan", Type: "float", Required: true},
+			{Key: "total_mk", Label: "Total Jumlah Mata Kuliah", Type: "float", Required: true},
+		}
+	case "ED2":
+		return []models.IndicatorField{
+			{Key: "dana_riset_keberlanjutan", Label: "Total Dana Riset Terkait Keberlanjutan (Rp)", Type: "float", Required: true},
+			{Key: "total_dana_riset", Label: "Total Dana Riset Universitas (Rp)", Type: "float", Required: true},
+		}
+	case "ED3":
+		return []models.IndicatorField{
+			{Key: "publikasi_keberlanjutan", Label: "Jumlah Publikasi Keberlanjutan", Type: "float", Required: true},
+			{Key: "total_publikasi", Label: "Total Jumlah Publikasi", Type: "float", Required: true},
+		}
+	case "ED10":
+		return []models.IndicatorField{
+			{Key: "lulusan_green_jobs", Label: "Jumlah Lulusan dengan Green Jobs", Type: "float", Required: true},
+			{Key: "total_lulusan", Label: "Total Jumlah Lulusan", Type: "float", Required: true},
+		}
+	case "GD1":
+		return []models.IndicatorField{
+			{Key: "anggaran_keberlanjutan", Label: "Total Anggaran Universitas Untuk Keberlanjutan (Rp)", Type: "float", Required: true},
+			{Key: "total_anggaran", Label: "Total Anggaran Universitas (Rp)", Type: "float", Required: true},
+		}
+	case "GD8":
+		return []models.IndicatorField{
+			{Key: "pimpinan_perempuan", Label: "Jumlah Pimpinan Perempuan", Type: "float", Required: true},
+			{Key: "total_pimpinan", Label: "Total Jumlah Pimpinan", Type: "float", Required: true},
+		}
+	default:
+		return []models.IndicatorField{
+			{Key: "value", Label: "Nilai Masukan", Type: "float", Required: true},
+		}
+	}
 }

@@ -92,7 +92,7 @@ func (r *CampusController) Store(ctx http.Context) http.Response {
 func (r *CampusController) Update(ctx http.Context) http.Response {
 	id := ctx.Request().RouteInt("id")
 	var campus models.Campus
-	err := facades.Orm().Query().Where("id = ?", id).First(&campus)
+	err := facades.Orm().Query().Where("id = ?", id).FirstOrFail(&campus)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",
@@ -159,7 +159,7 @@ func (r *CampusController) Update(ctx http.Context) http.Response {
 func (r *CampusController) Destroy(ctx http.Context) http.Response {
 	id := ctx.Request().RouteInt("id")
 	var campus models.Campus
-	err := facades.Orm().Query().Where("id = ?", id).First(&campus)
+	err := facades.Orm().Query().Where("id = ?", id).FirstOrFail(&campus)
 	if err != nil {
 		return ctx.Response().Json(http.StatusNotFound, http.Json{
 			"status":  "error",

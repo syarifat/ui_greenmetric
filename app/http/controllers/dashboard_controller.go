@@ -27,7 +27,7 @@ func (r *DashboardController) Index(ctx http.Context) http.Response {
 
 	// 1. Fetch Campus Info
 	var campus models.Campus
-	err := facades.Orm().Query().Where("id = ?", currentUser.CampusID).First(&campus)
+	err := facades.Orm().Query().Where("id = ?", currentUser.CampusID).FirstOrFail(&campus)
 	if err != nil {
 		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
 			"status":  "error",
@@ -39,8 +39,8 @@ func (r *DashboardController) Index(ctx http.Context) http.Response {
 	// 2. Fetch Current Assessment
 	currentYear := time.Now().Year()
 	var assessment models.CampusAssessment
-	err = facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", currentUser.CampusID, currentYear).First(&assessment)
-	if err != nil {
+	_ = facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", currentUser.CampusID, currentYear).First(&assessment)
+	if assessment.ID == 0 {
 		// Default to a draft assessment if not created yet
 		assessment = models.CampusAssessment{
 			CampusID:       currentUser.CampusID,
