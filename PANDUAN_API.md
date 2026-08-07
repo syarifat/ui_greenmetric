@@ -281,6 +281,70 @@ Dengan sistem Form Dinamis ini, Frontend **tidak boleh** melakukan *hardcode* ko
 
 ---
 
+### B. Ambil Semua Kategori Beserta Indikatornya (All)
+*   **Endpoint:** `GET /api/v1/categories`
+*   **Akses:** Privat (Seluruh Role Kampus)
+*   **Payload Request:** Kosong (`GET`)
+*   **Response Sukses (200 OK):**
+```json
+{
+  "status": "success",
+  "message": "All categories, indicators, and answers loaded successfully",
+  "data": [
+    {
+      "id": 1,
+      "code": "SI",
+      "name": "Setting and Infrastructure",
+      "max_points": 1100,
+      "weight_percentage": 11.00,
+      "indicators": [
+        {
+          "id": 1,
+          "code": "SI1",
+          "title": "Rasio area ruang terbuka terhadap luas total wilayah kampus",
+          "input_type": "NUMERIC_FORMULA",
+          "max_points": 300,
+          "fields": [
+            {
+              "id": 1,
+              "indicator_id": 1,
+              "key": "luas_total",
+              "label": "Luas total wilayah kampus (m²)",
+              "type": "float",
+              "required": true,
+              "options": ""
+            },
+            {
+              "id": 2,
+              "indicator_id": 1,
+              "key": "luas_dasar",
+              "label": "Luas dasar bangunan lantai dasar (m²)",
+              "type": "float",
+              "required": true,
+              "options": ""
+            }
+          ],
+          "tiers": [
+            {
+              "id": 1,
+              "indicator_id": 1,
+              "option_label": "<= 1%",
+              "min_value": 0,
+              "max_value": 1,
+              "operator": "<=",
+              "point_multiplier": 0.05
+            }
+          ],
+          "answer": null
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
 ## 🧮 5. Modul Core Scoring Engine
 
 ### A. Simpan & Hitung Jawaban Form

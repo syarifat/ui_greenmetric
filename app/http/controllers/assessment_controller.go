@@ -299,4 +299,124 @@ func (r *AssessmentController) SubmitAssessment(ctx http.Context) http.Response 
 			"overall_score":        assessment.OverallScore,
 		},
 	})
-}	
+}
+
+// GetAllCategoriesWithIndicators fetches all categories and their indicators (with fields, tiers, and campus answers)
+func (r *AssessmentController) GetAllCategoriesWithIndicators(ctx http.Context) http.Response {
+	var currentUser models.User
+	if err := facades.Auth(ctx).User(&currentUser); err != nil {
+		return ctx.Response().Json(http.StatusUnauthorized, http.Json{
+			"status":  "error",
+			"code":    http.StatusUnauthorized,
+			"message": "Unauthorized",
+		})
+	}
+
+	// 1. Fetch all Categories
+	var categories []models.Category
+	err := facades.Orm().Query().Order("id asc").Get(&categories)
+	if err != nil {
+		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"status":  "error",
+			"code":    http.StatusInternalServerError,
+			"message": "Failed to fetch categories",
+		})
+	}
+
+	// 2. Fetch all Indicators with Fields
+	var indicators []models.Indicator
+	err = facades.Orm().Query().With("Fields").Get(&indicators)
+	if err != nil {
+		return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+			"status":  "error",
+			"code":    http.StatusInternalServerError,
+			"message": "Failed to fetch indicators",
+		})
+	}
+
+	// Group indicators by CategoryID
+	indicatorsMap := make(map[uint][]models.Indicator)
+	var indicatorIDs []uint
+	for _, ind := range indicators {
+		indicatorsMap[ind.CategoryID] = append(indicatorsMap[ind.CategoryID], ind)
+		indicatorIDs = append(indicatorIDs, ind.ID)
+	}
+
+	// 3. Fetch Tiers for all indicators
+	var tiers []models.IndicatorScoringTier
+	if len(indicatorIDs) > 0 {
+		facades.Orm().Query().Where("indicator_id IN ?", indicatorIDs).Get(&tiers)
+	}
+
+	// Map tiers to indicator IDs
+	tiersMap := make(map[uint][]models.IndicatorScoringTier)
+	for _, t := range tiers {
+		tiersMap[t.IndicatorID] = append(tiersMap[t.IndicatorID], t)
+	}
+
+	// 4. Fetch Current Assessment and Answers for this campus
+	currentYear := time.Now().Year()
+	var assessment models.CampusAssessment
+	facades.Orm().Query().Where("campus_id = ? AND assessment_year = ?", currentUser.CampusID, currentYear).First(&assessment)
+
+	answersMap := make(map[uint]models.AssessmentAnswer)
+	if assessment.ID != 0 && len(indicatorIDs) > 0 {
+		var answers []models.AssessmentAnswer
+		facades.Orm().Query().With("Evidences").Where("campus_assessment_id = ? AND indicator_id IN ?", assessment.ID, indicatorIDs).Get(&answers)
+		for _, ans := range answers {
+			answersMap[ans.IndicatorID] = ans
+		}
+	}
+
+	var result []http.Json
+	for _, cat := range categories {
+		catIndicators := indicatorsMap[cat.ID]
+		indicatorResultList := []http.Json{}
+
+		for _, ind := range catIndicators {
+			ans, hasAnswer := answersMap[ind.ID]
+			var answerData any = nil
+			if hasAnswer {
+				answerData = http.Json{
+					"id":               ans.ID,
+					"raw_input_data":   ans.RawInputData,
+					"calculated_value": ans.CalculatedValue,
+					"selected_tier_id": ans.SelectedTierID,
+					"earned_points":    ans.EarnedPoints,
+					"evidences":        ans.Evidences,
+				}
+			}
+
+			indTiers := tiersMap[ind.ID]
+			if indTiers == nil {
+				indTiers = []models.IndicatorScoringTier{}
+			}
+
+			indicatorResultList = append(indicatorResultList, http.Json{
+				"id":         ind.ID,
+				"code":       ind.Code,
+				"title":      ind.Title,
+				"input_type": ind.InputType,
+				"max_points": ind.MaxPoints,
+				"fields":     ind.Fields,
+				"tiers":      indTiers,
+				"answer":     answerData,
+			})
+		}
+
+		result = append(result, http.Json{
+			"id":                cat.ID,
+			"code":              cat.Code,
+			"name":              cat.Name,
+			"max_points":        cat.MaxPoints,
+			"weight_percentage": cat.WeightPercentage,
+			"indicators":        indicatorResultList,
+		})
+	}
+
+	return ctx.Response().Json(http.StatusOK, http.Json{
+		"status":  "success",
+		"message": "All categories, indicators, and answers loaded successfully",
+		"data":    result,
+	})
+}
