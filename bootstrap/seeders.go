@@ -11,6 +11,7 @@ func Seeders() []seeder.Seeder {
 		&seeders.CategorySeeder{},
 		&seeders.IndicatorSeeder{},
 		&seeders.IndicatorScoringTierSeeder{},
+		&seeders.CampusSeeder{},
 		&seeders.UserSeeder{},
 	}
 }

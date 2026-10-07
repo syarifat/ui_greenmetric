@@ -15,13 +15,13 @@ func (s *UserSeeder) Signature() string {
 
 // Run executes the seeder logic.
 func (s *UserSeeder) Run() error {
-	// Create default Campus
+	// Gunakan kampus POLINEMA yang dibuat CampusSeeder (fallback: buat jika belum ada)
 	campus := models.Campus{
-		Code:            "POLINEMA-KDR",
-		Name:            "Politeknik Negeri Malang - PSDKU Kediri",
+		Code:            "POLINEMA",
+		Name:            "Politeknik Negeri Malang",
 		InstitutionType: "Vocational",
 		Climate:         "Tropical",
-		Setting:         "Suburban",
+		Setting:         "Urban",
 	}
 
 	campusCount, err := facades.Orm().Query().Model(&models.Campus{}).Where("code = ?", campus.Code).Count()
@@ -42,7 +42,7 @@ func (s *UserSeeder) Run() error {
 	}
 
 	// Create default User
-	hashedPassword, err := facades.Hash().Make("secretpassword")
+	hashedPassword, err := facades.Hash().Make("password")
 	if err != nil {
 		return err
 	}
